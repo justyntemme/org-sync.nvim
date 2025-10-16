@@ -1,5 +1,3 @@
--- In your Git repo at: org-sync.nvim/lua/org-sync/init.lua
-
 local M = {}
 
 function M.setup(opts)
@@ -20,27 +18,27 @@ function M.setup(opts)
 		group = orgHybridSync,
 		pattern = "*.org",
 		callback = function(args)
-			-- SIMPLIFIED LOGIC: Get the file's directory.
 			local dir = vim.fn.fnamemodify(args.file, ":h")
 
 			vim.notify("Git: Pulling changes...", vim.log.levels.INFO, { title = "Org Sync" })
-			-- Run git commands from the file's own directory.
 			vim.fn.jobstart("cd " .. vim.fn.shellescape(dir) .. " && git pull", {
 				on_exit = function(_, code)
-					-- The command will fail silently if not in a git repo, which is fine.
 					if code == 0 then
 						vim.cmd("checktime")
 						vim.notify("Git: Repo is up to date.", vim.log.levels.INFO, { title = "Org Sync" })
 					else
-						-- We only notify on failure if we are in a git repo.
+						-- On pull failure (like a merge conflict), open LazyGit.
 						if
-							vim.fn.isdirectory(dir .. "/.git")
-							or vim.fn.system(
-									"cd " .. vim.fn.shellescape(dir) .. " && git rev-parse --is-inside-work-tree"
-								)
-								== "true\n"
+							vim.fn
+								.system("cd " .. vim.fn.shellescape(dir) .. " && git rev-parse --is-inside-work-tree")
+								:match("true")
 						then
-							vim.notify("Git: Pull failed!", vim.log.levels.ERROR, { title = "Org Sync Error" })
+							vim.notify(
+								"Git: Pull failed! Opening LazyGit to resolve.",
+								vim.log.levels.ERROR,
+								{ title = "Org Sync Error" }
+							)
+							require("lazyvim.util").terminal.open("lazygit", { cwd = dir })
 						end
 					end
 				end,
@@ -55,7 +53,6 @@ function M.setup(opts)
 		group = orgHybridSync,
 		pattern = "*.org",
 		callback = function(args)
-			-- SIMPLIFIED LOGIC: Get the file's directory and name.
 			local dir = vim.fn.fnamemodify(args.file, ":h")
 			local filename = vim.fn.fnamemodify(args.file, ":t")
 			local commit_message = "Auto-commit: update " .. filename
@@ -65,7 +62,6 @@ function M.setup(opts)
 				vim.log.levels.INFO,
 				{ title = "Org Sync" }
 			)
-			-- Run git commands from the file's own directory, adding by filename.
 			vim.fn.jobstart("cd " .. vim.fn.shellescape(dir) .. " && git add " .. vim.fn.shellescape(filename), {
 				on_exit = function(_, add_code)
 					if add_code ~= 0 then
@@ -98,7 +94,6 @@ function M.setup(opts)
 														"Git: Push failed! Opening LazyGit...",
 														vim.log.levels.ERROR
 													)
-													-- Open LazyGit in the file's directory.
 													require("lazyvim.util").terminal.open("lazygit", { cwd = dir })
 												end
 											end,
