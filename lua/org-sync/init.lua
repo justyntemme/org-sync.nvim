@@ -1,6 +1,6 @@
 -- This file returns the complete LazyVim plugin specification.
 return {
-	event = { "BufReadPost ~/.org/**/*.org", "BufWritePost ~/.org/**/*.org" },
+	event = { "BufReadPost *.org", "BufWritePost *.org" },
 
 	config = function()
 		--- Finds the root of a Git repository by searching upwards from a starting path.
